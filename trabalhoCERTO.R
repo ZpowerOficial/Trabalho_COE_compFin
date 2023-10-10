@@ -12,7 +12,7 @@ dados_numericos <- dados[sapply(dados, is.numeric)]
 retornos <- dados_numericos[-1, ] / head(dados_numericos, -1) - 1
 
 # Calculando a matriz de covariância dos retornos
-cor_matriz <- cor(retornos, use = "complete.obs")
+cov_matriz <- cov(retornos, use = "complete.obs")
 
 # Calculando as médias dos retornos
 mu.vec <- colMeans(retornos, na.rm = TRUE)
@@ -30,12 +30,12 @@ PF <- matrix(0, nrow = n_retornos, ncol = n_ativos)
 P0 <- dados_numericos[nrow(dados_numericos), ]
 
 for (i in 1:num_simulacoes) {
-  ret.sim <- rmvnorm(753, mean = mu.vec, sigma = cor_matriz)
+  ret.sim <- rmvnorm(753, mean = mu.vec, sigma = cov_matriz)
   PF <- data.frame(matrix(0, nrow = nrow(ret.sim), ncol = n_ativos))
   for(j in 1:ncol(ret.sim)) {
     PF[1,j] = P0[j] * (1 + ret.sim[1,j])
     if(length(PF) > 0 && nrow(PF) > 1){
-      PF[2:nrow(PF),j] = PF[1,j] * cumsum((100+ret.sim[2:nrow(ret.sim),j])/100)
+      PF[,j] = PF[1,j] * exp(cumsum(ret.sim[,j]))
     }
   }
   

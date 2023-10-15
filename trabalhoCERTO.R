@@ -3,19 +3,21 @@ library(readxl)
 library(mvtnorm)
 
 # Carregar os dados de preços de fechamento dos ativos
-dados <- read_excel("C:/Users/chris/Downloads/close.xlsx")
+dados <- read_excel("Documents/Comp e Finanças/close.xlsx")
 
 # Selecionar apenas as colunas numéricas (preços de fechamento dos ativos)
 dados_numericos <- dados[sapply(dados, is.numeric)]
 
 # Calculando os retornos dos ativos
-retornos <- dados_numericos[-1, ] / head(dados_numericos, -1) - 1
+#retornos <- dados_numericos[-1, ] / head(dados_numericos, -1) - 1
+retornos = apply(X = log(dados_numericos), MARGIN = 2, FUN = diff)
 
 # Calculando a matriz de covariância dos retornos
-cov_matriz <- cov(retornos, use = "complete.obs")
+cov_matriz <- cov(retornos)
 
 # Calculando as médias dos retornos
 mu.vec <- colMeans(retornos, na.rm = TRUE)
+# mu.vec <- apply(retornos, 2, mean)
 
 # Inicializando as contas
 conta <- rep(0, 7)

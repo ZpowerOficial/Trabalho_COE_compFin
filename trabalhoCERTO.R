@@ -9,13 +9,15 @@ dados <- read_excel("C:/Users/chris/Downloads/close.xlsx")
 dados_numericos <- dados[sapply(dados, is.numeric)]
 
 # Calculando os retornos dos ativos
-retornos <- dados_numericos[-1, ] / head(dados_numericos, -1) - 1
+#retornos <- dados_numericos[-1, ] / head(dados_numericos, -1) - 1
+retornos = apply(X = log(dados_numericos), MARGIN = 2, FUN = diff)
 
 # Calculando a matriz de covariância dos retornos
-cov_matriz <- cov(retornos, use = "complete.obs")
+cov_matriz <- cov(retornos)
 
 # Calculando as médias dos retornos
 mu.vec <- colMeans(retornos, na.rm = TRUE)
+# mu.vec <- apply(retornos, 2, mean)
 
 # Inicializando as contas
 conta <- rep(0, 7)
@@ -23,20 +25,17 @@ conta <- rep(0, 7)
 # Inicializar a matriz para armazenar os resultados
 num_simulacoes <- 1e5
 n_ativos <- ncol(dados_numericos)
-n_retornos <- nrow(dados_numericos)
-PF <- matrix(0, nrow = n_retornos, ncol = n_ativos)
+n_retornos <- 752
+PF <- matrix(0, nrow = (n_retornos+1), ncol = n_ativos)
 
 # Laço de Monte Carlo
 P0 <- dados_numericos[nrow(dados_numericos), ]
 
 for (i in 1:num_simulacoes) {
-  ret.sim <- rmvnorm(753, mean = mu.vec, sigma = cov_matriz)
-  PF <- data.frame(matrix(0, nrow = nrow(ret.sim), ncol = n_ativos))
+  ret.sim <- rmvnorm(n_retornos, mean = mu.vec, sigma = cov_matriz)
+  PF <- data.frame(matrix(0, nrow = (n_retornos+1), ncol = n_ativos))
   for(j in 1:ncol(ret.sim)) {
-    PF[1,j] = P0[j] * (1 + ret.sim[1,j])
-    if(length(PF) > 0 && nrow(PF) > 1){
-      PF[,j] = PF[1,j] * exp(cumsum(ret.sim[,j]))
-    }
+      PF[,j] = as.numeric(P0[j]) * c(1, exp(cumsum(ret.sim[,j])))
   }
   
   if (all(PF[126,] > P0)) {

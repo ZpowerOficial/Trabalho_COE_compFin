@@ -3,7 +3,7 @@ library(readxl)
 library(mvtnorm)
 
 # Carregar os dados de preços de fechamento dos ativos
-dados <- read_excel("Documents/Comp e Finanças/close.xlsx")
+dados <- read_excel("C:/Users/chris/Downloads/close.xlsx")
 
 # Selecionar apenas as colunas numéricas (preços de fechamento dos ativos)
 dados_numericos <- dados[sapply(dados, is.numeric)]
@@ -35,7 +35,7 @@ for (i in 1:num_simulacoes) {
   ret.sim <- rmvnorm(n_retornos, mean = mu.vec, sigma = cov_matriz)
   PF <- data.frame(matrix(0, nrow = (n_retornos+1), ncol = n_ativos))
   for(j in 1:ncol(ret.sim)) {
-      PF[,j] = as.numeric(P0[j]) * c(1, exp(cumsum(ret.sim[,j])))
+    PF[,j] = as.numeric(P0[j]) * c(1, exp(cumsum(ret.sim[,j])))
   }
   
   if (all(PF[126,] > P0)) {

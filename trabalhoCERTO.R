@@ -3,7 +3,7 @@ library(readxl)
 library(mvtnorm)
 
 # Carregar os dados de preços de fechamento dos ativos
-dados <- read_excel("C:/Users/chris/Downloads/close.xlsx")
+dados <- read_excel("Documents/Comp e Finanças/close.xlsx")
 
 # Selecionar apenas as colunas numéricas (preços de fechamento dos ativos)
 dados_numericos <- dados[sapply(dados, is.numeric)]

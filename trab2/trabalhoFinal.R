@@ -18,17 +18,17 @@ close.df <- data.frame(dados_numericos)
 dados_codigos <- colnames(close.df)
 
 # (ii, iii, iv, v) Calculando retorno cc, esperanca e volatilidade media e covariancias
-ret.df = apply(log(close.df), 2, diff)
-mu.vec = apply(ret.df, 2, mean)
-sig.vec = apply(ret.df, 2, sd)
-sigma.mat = cov(ret.df)
+(ret.df = apply(log(close.df), 2, diff))
+(mu.vec = apply(ret.df, 2, mean))
+(sig.vec = apply(ret.df, 2, sd))
+(sigma.mat = cov(ret.df))
 
-# (vi Opcional) Criando grafico risco x retorno
+'# (vi Opcional) Criando grafico risco x retorno
 POPU = 1e4
 x.mat = matrix(0, nrow = POPU, ncol = length(dados_codigos))
 
 # Criando o prórpio longshort já que dá erro ao instalar a biblioteca necessária
-random_longshort <- function(n, x.t.long, x.t.short) {
+random.longshort <- function(n, x.t.long, x.t.short) {
   # Gera pesos aleatórios
   w <- runif(n)
   
@@ -62,9 +62,9 @@ for (i in 1:POPU) {
   sig.p[i] <- sqrt(t(x.mat[i,]) %*% sigma.mat %*% x.mat[i,])
 }
 
-plot(sig.p, mu.p, pch = 16, col = 'black',
+plot(sig.p, mu.p, pch = 16, col = "black",
      xlim = c(0, max(sig.p)),
-     xlab = expression(sigma[p]), ylab = expression(mu[p]))
+     xlab = expression(sigma[p]), ylab = expression(mu[p]))'
 
 # (vii) Determinando GMVP pela formula do slide
 sigma.inv = solve(sigma.mat)
@@ -90,4 +90,15 @@ tangente.zivot = tangency.portfolio(er = mu.vec, cov.mat = sigma.mat, risk.free 
 
 # (xiv Opcional) Coloca reta de investimentos eficientes
 
-# (xv) 
+# (xv e xvi) Determinando GMVP onde vendas a descoberto não são permitidas
+n <- length(mu.vec) # número de ativos
+Dmat <- 2 * sigma.mat # Dmat na função solve.QP() é 2 vezes a matriz de covariância
+dvec <- rep(0, n) # dvec é um vetor de zeros
+Amat <- cbind(1, diag(n)) # matriz de restrições
+bvec <- c(1, rep(0, n)) # vetor de restrições
+sol <- solve.QP(Dmat, dvec, Amat, bvec, meq = 1) # resolvendo o problema de otimização quadrática
+(weights <- sol$solution) # pesos do portfólio GMVP
+
+# (xix) Determinando o portfólio tangente sem vendas a descoberto
+rf <- 0 # retorno do ativo livre de risco
+(tg.s.short <- tangency.portfolio(er = mu.vec, cov.mat = sigma.mat, risk.free = rf, shorts = FALSE))

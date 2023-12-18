@@ -6,15 +6,16 @@
 # Carregar bibliotecas
 library(readxl)
 library(quadprog)
+library(rportfolio)
 source("portfolio.r")
 getwd()
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # (i) Retirando informacoes da planilha
 dados <- read_excel("dados.xlsx", sheet = "close.df")
-dados_codigos <- dados[sapply(dados, is.character)]
 dados_numericos <- dados[sapply(dados, is.numeric)]
 close.df <- data.frame(dados_numericos)
+dados_codigos <- colnames(close.df)
 
 # (ii, iii, iv, v) Calculando retorno cc, esperanca e volatilidade media e covariancias
 ret.df = apply(log(close.df), 2, diff)
@@ -23,6 +24,44 @@ sig.vec = apply(ret.df, 2, sd)
 sigma.mat = cov(ret.df)
 
 # (vi Opcional) Criando grafico risco x retorno
+POPU = 1e4
+x.mat = matrix(0, nrow = POPU, ncol = length(dados_codigos))
+
+# Criando o prórpio longshort já que dá erro ao instalar a biblioteca necessária
+random_longshort <- function(n, x.t.long, x.t.short) {
+  # Gera pesos aleatórios
+  w <- runif(n)
+  
+  # Normaliza os pesos para que a soma seja x.t.long para long e x.t.short para short
+  w_long <- w / sum(w) * x.t.long
+  w_short <- (1 - w) / sum(1 - w) * x.t.short
+  
+  # Ajusta os pesos para que a soma total seja 1
+  w_total <- w_long + w_short
+  w_total <- w_total / sum(w_total)
+  
+  # Retorna os pesos ajustados
+  return(w_total)
+}
+
+for (i in 1:POPU) {
+  # gera um número entre 1 e 2, correspondente ao somatório das posições longas
+  x.long = runif(1, 1, 5)
+  x.mat[i, ] = random.longshort(
+    n = length(dados_codigos), 
+    x.t.long = x.long, 
+    x.t.short = x.long - 1)
+}
+
+mu.p = x.mat %*% mu.vec
+sig.p = rep(0,POPU)
+
+# Loop for para calcular a volatilidade para cada linha da matriz
+for (i in 1:POPU) {
+  # Calcula a volatilidade para a i-?sima linha
+  sig.p[i] <- sqrt(t(x.mat[i,]) %*% sigma.mat %*% x.mat[i,])
+}
+
 plot(sig.p, mu.p, pch = 16, col = 'black',
      xlim = c(0, max(sig.p)),
      xlab = expression(sigma[p]), ylab = expression(mu[p]))

@@ -116,22 +116,26 @@ points(sig.p.fron, mu.p.fron, pch = 16, cex = 0.9, col = 'lightgreen')
 sig.gmvp = gmvp.zivot$sd
 mu.gmvp = gmvp.zivot$er
 
-points(sig.gmvp, mu.gmvp, pch = 16, col = 'red', cex = 1.2)
-text(sig.gmvp, mu.gmvp, 'GMVP', pos = 2, cex = 0.75, col = 'red')
+points(sig.gmvp, mu.gmvp, pch = 16, col = 'darkgreen', cex = 1.2)
+text(sig.gmvp, mu.gmvp, 'GMVP', pos = 2, cex = 0.75, col = 'darkgreen')
 
 
 # (xi) Calculando portfolio tangente pelos multiplicadores de Lagrange
 one.vec = rep(1, 18)
 rf <- 0
-tangente.formula = sigma.inv %*% (mu.vec - rf * one.vec) / as.numeric(t(one.vec) %*% sigma.inv %*% (mu.vec - rf * one.vec))
+(tangente.formula = sigma.inv %*% (mu.vec - rf * one.vec) / as.numeric(t(one.vec) %*% sigma.inv %*% (mu.vec - rf * one.vec)))
 
 # (xii) Calculando portfolio tangente pelo portfolio.r
-rf <- 0
-tangente.zivot = tangency.portfolio(er = mu.vec, cov.mat = sigma.mat, risk.free = rf)
+(tangente.zivot = tangency.portfolio(er = mu.vec, cov.mat = sigma.mat, risk.free = rf))
 
 # (xiii Opcional) Colocar portfolio tangente no grafico
+points(tangente.zivot$sd, tangente.zivot$er, pch = 16, col = 'magenta', cex=1.2)
+text(tangente.zivot$sd, tangente.zivot$er, 'TANGENTE', pos = 1, cex = 0.75, col = 'magenta')
 
 # (xiv Opcional) Coloca reta de investimentos eficientes
+abline(a = rf, b = (tangente.zivot$er - rf)/tangente.zivot$sd, col = 'darkmagenta')
+points(0, rf, pch = 16, col = 'magenta', cex = 1.2)
+text(0, rf, 'RF', pos = 1, cex = 0.75, col = 'magenta')
 
 # (xv e xvi) Determinando GMVP onde vendas a descoberto não são permitidas
 n <- length(mu.vec) # número de ativos
@@ -142,6 +146,22 @@ bvec <- c(1, rep(0, n)) # vetor de restrições
 sol <- solve.QP(Dmat, dvec, Amat, bvec, meq = 1) # resolvendo o problema de otimização quadrática
 (weights <- sol$solution) # pesos do portfólio GMVP
 
+(gmvp.semdescoberto = globalMin.portfolio(er = mu.vec ,cov.mat = sigma.mat, shorts = F))
+
+# (xviii opicional) Acrescentando a bala de Markowitz sem vendas a descoberto no gráfico
+effron.ns = efficient.frontier(er = mu.vec, cov.mat =  sigma.mat,
+  alpha.max = 1, alpha.min = -1, nport = 20, shorts = F
+)
+points(effron.ns$sd, effron.ns$er, pch = 16, col = 'blue', cex = 0.9)
+
+# (xvii opicional) Acrescentando GMVP sem vendas a descoberto no gráfico
+# Coloquei após por motivos visuais
+points(gmvp.semdescoberto$sd, gmvp.semdescoberto$er, pch = 16, col = 'darkblue', cex = 1.1)
+text(gmvp.semdescoberto$sd, gmvp.semdescoberto$er, 'GMVP NS', pos = 4, cex = 0.7, col = 'darkblue')
+
 # (xix) Determinando o portfólio tangente sem vendas a descoberto
-rf <- 0 # retorno do ativo livre de risco
 (tg.s.short <- tangency.portfolio(er = mu.vec, cov.mat = sigma.mat, risk.free = rf, shorts = FALSE))
+
+# (xx) Adicionando a reta tangente sem vendas a descoberto no gráfico
+abline(a = rf, b = (tg.s.short$er - rf)/tg.s.short$sd, col = 'darkred')
+points(tg.s.short$sd, tg.s.short$er, pch = 16, col = 'red', cex = 1.2)
